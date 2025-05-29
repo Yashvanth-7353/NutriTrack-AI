@@ -1,7 +1,8 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingBasket, FlaskConical, Leaf } from 'lucide-react';
+import { ShoppingBasket, FlaskConical, Leaf, Bot } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -12,11 +13,11 @@ export default function HomePage() {
           Welcome to NutriTrack AI
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Your intelligent assistant for tracking food safety, analyzing ingredients, and managing expiry dates. Keep your pantry healthy and safe with AI-powered insights.
+          Your intelligent assistant for tracking food safety, analyzing ingredients, managing expiry dates, and understanding FSSAI guidelines.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
         <Card className="hover:shadow-lg transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center gap-4">
             <ShoppingBasket className="h-10 w-10 text-accent" />
@@ -27,7 +28,7 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Efficiently manage your food inventory. Add products using barcodes, monitor their expiry dates, and receive timely notifications to reduce waste and ensure safety.
+              Efficiently manage your food inventory. Add products, monitor expiry dates, quantity, and category.
             </p>
             <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
               <Link href="/food-management">
@@ -47,11 +48,31 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Leverage the power of AI to understand your food better. Input a list of ingredients and get a detailed analysis of potential health concerns and harmful substances.
+              Understand your food better. Input ingredients or product names for detailed AI analysis.
             </p>
             <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
               <Link href="/ingredient-analyzer">
                 Go to AI Analyzer
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="flex flex-row items-center gap-4">
+            <Bot className="h-10 w-10 text-accent" />
+            <div>
+              <CardTitle className="text-2xl">FSSAI Chatbot</CardTitle>
+              <CardDescription>Ask questions about FSSAI rules & regulations.</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Get AI-powered answers to your queries about FSSAI guidelines and food safety standards in India.
+            </p>
+            <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Link href="/fssai-chatbot">
+                Go to FSSAI Chatbot
               </Link>
             </Button>
           </CardContent>
