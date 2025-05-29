@@ -13,7 +13,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {children}
       </main>
       <footer className="bg-muted/50 text-muted-foreground py-6 text-center text-sm">
-        <p>© {new Date().getFullYear()} NutriTrack AI. All rights reserved.</p>
         <div className="mt-3 pt-3 border-t border-muted-foreground/20">
           <p className="font-semibold mb-1">Developed by:</p>
           <ul className="space-y-0.5">
