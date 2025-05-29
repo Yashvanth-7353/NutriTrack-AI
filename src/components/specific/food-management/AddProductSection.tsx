@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Barcode, CalendarPlus, Info, PackagePlus, AlertTriangle } from 'lucide-react';
+import { Barcode, CalendarPlus, Info, PackagePlus, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
 import { lookupBarcodeAction } from '@/lib/actions';
 import type { BarcodeInfo, TrackedProduct } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentDateFormatted, calculateExpiryStatus } from '@/lib/utils';
+import { guessIngredientsForProduct } from '@/ai/flows/guess-ingredients-flow';
 
 const LS_PRODUCTS_KEY = 'nutriTrackProducts';
 
@@ -22,6 +23,7 @@ export default function AddProductSection() {
   const [customProductName, setCustomProductName] = useState('');
   const [customIngredients, setCustomIngredients] = useState('');
   const [isManualEntry, setIsManualEntry] = useState(false);
+  const [isSuggestingIngredients, setIsSuggestingIngredients] = useState(false);
 
   const { toast } = useToast();
 
@@ -38,24 +40,49 @@ export default function AddProductSection() {
     setFoundProductInfo(null);
     setExpiryDate('');
     setCustomProductName('');
-    setCustomIngredients('');
+    setCustomIngredients(''); // Reset custom ingredients on new lookup
     setIsManualEntry(false);
 
     try {
       const product = await lookupBarcodeAction(barcode.trim());
       if (product) {
         setFoundProductInfo(product);
+        // If product found via barcode has ingredients, use them. Otherwise, customIngredients remains empty for AI suggestion.
+        setCustomIngredients(product.ingredients || ''); 
         toast({ title: "Product Found", description: `${product.productName} details loaded.` });
       } else {
         toast({ title: "Product Not Found", description: "No product found for this barcode. You can add it manually.", variant: "destructive" });
-        setIsManualEntry(true); // Enable manual entry if barcode not found
+        setIsManualEntry(true);
       }
     } catch (error) {
       toast({ title: "Error", description: "Failed to lookup barcode.", variant: "destructive" });
       console.error(error);
-      setIsManualEntry(true); // Enable manual entry on error
+      setIsManualEntry(true);
     } finally {
       setIsLoadingBarcode(false);
+    }
+  };
+
+  const handleSuggestIngredients = async () => {
+    const productNameToSuggest = isManualEntry ? customProductName : foundProductInfo?.productName;
+    if (!productNameToSuggest) {
+      toast({ title: "Product Name Needed", description: "Please provide a product name before suggesting ingredients.", variant: "destructive" });
+      return;
+    }
+    setIsSuggestingIngredients(true);
+    try {
+      const result = await guessIngredientsForProduct({ productName: productNameToSuggest });
+      if (result.ingredients) {
+        setCustomIngredients(result.ingredients);
+        toast({ title: "Ingredients Suggested", description: "AI has suggested ingredients based on the product name." });
+      } else {
+        toast({ title: "No Ingredients Suggested", description: "AI could not determine common ingredients for this product.", variant: "default" });
+      }
+    } catch (error) {
+      console.error("Error suggesting ingredients:", error);
+      toast({ title: "AI Error", description: "Failed to suggest ingredients.", variant: "destructive" });
+    } finally {
+      setIsSuggestingIngredients(false);
     }
   };
 
@@ -67,7 +94,10 @@ export default function AddProductSection() {
     }
 
     const productName = isManualEntry ? customProductName : foundProductInfo?.productName;
-    const ingredients = isManualEntry ? customIngredients : foundProductInfo?.ingredients;
+    // Use customIngredients as the source of truth if it has been populated (either manually or by AI)
+    // Otherwise, fall back to foundProductInfo.ingredients (original from barcode DB)
+    const ingredients = customIngredients.trim() ? customIngredients : (foundProductInfo?.ingredients || 'N/A');
+
 
     if (!productName) {
         toast({ title: "Product Name Required", description: "Please enter the product name for manual entry or look up a barcode.", variant: "destructive" });
@@ -75,10 +105,10 @@ export default function AddProductSection() {
     }
 
     const newProduct: TrackedProduct = {
-      id: Date.now().toString(), // Simple unique ID
-      barcode: barcode.trim() || 'MANUAL', // Use 'MANUAL' if no barcode was entered (manual mode)
+      id: Date.now().toString(),
+      barcode: barcode.trim() || 'MANUAL',
       productName,
-      ingredients: ingredients || 'N/A',
+      ingredients: ingredients,
       expiryDate,
       uploadDate: getCurrentDateFormatted(),
       status: calculateExpiryStatus(expiryDate),
@@ -91,16 +121,13 @@ export default function AddProductSection() {
       
       toast({ title: "Product Added", description: `${newProduct.productName} has been added to your tracker.` });
       
-      // Reset form
       setBarcode('');
       setFoundProductInfo(null);
       setExpiryDate('');
       setCustomProductName('');
       setCustomIngredients('');
       setIsManualEntry(false);
-      setProductsVersion(v => v + 1); // Trigger re-render for ProductsDisplay
-
-      // Dispatch a custom event to notify ProductsDisplay component
+      setProductsVersion(v => v + 1); 
       window.dispatchEvent(new CustomEvent('productsUpdated'));
 
     } catch (error) {
@@ -109,7 +136,6 @@ export default function AddProductSection() {
     }
   };
   
-  // Placeholder for barcode image upload
   const handleBarcodeImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -122,6 +148,7 @@ export default function AddProductSection() {
     }
   };
 
+  const canSuggestIngredients = (isManualEntry && !!customProductName.trim()) || (!!foundProductInfo?.productName.trim());
 
   return (
     <div className="space-y-6">
@@ -146,7 +173,7 @@ export default function AddProductSection() {
                 className="mt-1"
               />
             </div>
-            <Button onClick={handleBarcodeLookup} disabled={isLoadingBarcode} className="w-full sm:w-auto">
+            <Button onClick={handleBarcodeLookup} disabled={isLoadingBarcode || isSuggestingIngredients} className="w-full sm:w-auto">
               {isLoadingBarcode ? 'Looking up...' : 'Lookup Barcode'}
             </Button>
           </div>
@@ -175,36 +202,57 @@ export default function AddProductSection() {
           <CardContent>
             <form onSubmit={handleAddProduct} className="space-y-4">
               {isManualEntry && (
-                <>
-                  <div>
-                    <Label htmlFor="manual-product-name">Product Name</Label>
-                    <Input
-                      id="manual-product-name"
-                      value={customProductName}
-                      onChange={(e) => setCustomProductName(e.target.value)}
-                      placeholder="Enter product name"
-                      required
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="manual-ingredients">Ingredients</Label>
-                    <Input
-                      id="manual-ingredients"
-                      value={customIngredients}
-                      onChange={(e) => setCustomIngredients(e.target.value)}
-                      placeholder="Enter ingredients, comma separated"
-                      className="mt-1"
-                    />
-                  </div>
-                </>
-              )}
-              {!isManualEntry && foundProductInfo && (
-                <div className="space-y-2 text-sm p-3 bg-secondary/50 rounded-md">
-                  <p><strong>Product Name:</strong> {foundProductInfo.productName}</p>
-                  <p><strong>Ingredients:</strong> {foundProductInfo.ingredients || 'N/A'}</p>
+                <div>
+                  <Label htmlFor="manual-product-name">Product Name</Label>
+                  <Input
+                    id="manual-product-name"
+                    value={customProductName}
+                    onChange={(e) => setCustomProductName(e.target.value)}
+                    placeholder="Enter product name"
+                    required
+                    className="mt-1"
+                  />
                 </div>
               )}
+              {!isManualEntry && foundProductInfo && (
+                <div className="space-y-2 text-sm p-3 bg-secondary/50 rounded-md mb-2">
+                  <p><strong>Product Name:</strong> {foundProductInfo.productName}</p>
+                  {/* Display original ingredients from barcode lookup if customIngredients is not set by AI yet */}
+                  <p><strong>Database Ingredients:</strong> {foundProductInfo.ingredients || 'N/A'}</p>
+                </div>
+              )}
+
+              {/* Ingredients section - always editable, can be AI populated */}
+              <div>
+                <Label htmlFor="product-ingredients">Ingredients</Label>
+                <div className="flex flex-col sm:flex-row gap-2 items-start">
+                  <Input
+                    id="product-ingredients"
+                    value={customIngredients}
+                    onChange={(e) => setCustomIngredients(e.target.value)}
+                    placeholder="Enter ingredients, or use AI suggestion"
+                    className="mt-1 flex-grow"
+                  />
+                  {canSuggestIngredients && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSuggestIngredients}
+                      disabled={isSuggestingIngredients || isLoadingBarcode}
+                      className="mt-1 w-full sm:w-auto"
+                    >
+                      {isSuggestingIngredients ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      Suggest with AI
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Comma-separated. You can edit after AI suggestion.</p>
+              </div>
+              
               <div>
                 <Label htmlFor="expiry-date">Expiry Date</Label>
                 <Input
@@ -214,10 +262,10 @@ export default function AddProductSection() {
                   onChange={(e) => setExpiryDate(e.target.value)}
                   required
                   className="mt-1"
-                  min={getCurrentDateFormatted()} // Optional: prevent past dates
+                  min={getCurrentDateFormatted()}
                 />
               </div>
-              <Button type="submit" className="w-full sm:w-auto">
+              <Button type="submit" className="w-full sm:w-auto" disabled={isSuggestingIngredients || isLoadingBarcode}>
                 <CalendarPlus className="mr-2 h-4 w-4" /> Add to Tracker
               </Button>
             </form>
@@ -227,13 +275,13 @@ export default function AddProductSection() {
        {!barcode && !foundProductInfo && !isManualEntry && (
          <div className="p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-md flex items-start gap-3 text-sm">
             <Info className="h-5 w-5 mt-0.5 shrink-0"/>
-            <p>Enter a product barcode to automatically fetch its details, or enable manual entry if the barcode is not found or you wish to add a custom product.</p>
+            <p>Enter a product barcode to automatically fetch its details, or enable manual entry if the barcode is not found or you wish to add a custom product. You can then use AI to suggest ingredients based on the product name.</p>
          </div>
        )}
        {barcode && !isLoadingBarcode && !foundProductInfo && !isManualEntry && (
          <div className="p-4 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-md flex items-start gap-3 text-sm">
             <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0"/>
-            <p>Product not found for barcode "{barcode}". You can proceed to add it manually by filling in the expiry date and optionally overriding product name/ingredients if needed.</p>
+            <p>Product not found for barcode "{barcode}". You can proceed to add it manually by filling in the product name, then use AI to suggest ingredients, and set the expiry date.</p>
          </div>
        )}
 
