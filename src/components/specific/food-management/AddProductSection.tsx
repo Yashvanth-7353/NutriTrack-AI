@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FormEvent } from 'react';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Barcode, CalendarPlus, Info, PackagePlus, AlertTriangle, Sparkles, Loader2, Tag, ShoppingBag } from 'lucide-react';
+import { Barcode, CalendarPlus, Info, PackagePlus, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
 import { lookupBarcodeAction } from '@/lib/actions';
 import type { BarcodeInfo, TrackedProduct } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -144,18 +145,6 @@ export default function AddProductSection() {
     }
   };
   
-  const handleBarcodeImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      toast({
-        title: "Image Upload (Demo)",
-        description: `File "${file.name}" selected. Actual barcode scanning from image is not implemented in this demo. Please type barcode manually.`,
-        variant: "default",
-        duration: 5000,
-      });
-    }
-  };
-
   const canSuggestIngredients = (isManualEntry && !!customProductName.trim()) || (!!foundProductInfo?.productName.trim());
 
   return (
@@ -182,13 +171,9 @@ export default function AddProductSection() {
               />
             </div>
             <Button onClick={handleBarcodeLookup} disabled={isLoadingBarcode || isSuggestingIngredients} className="w-full sm:w-auto">
+              {isLoadingBarcode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isLoadingBarcode ? 'Looking up...' : 'Lookup Barcode'}
             </Button>
-          </div>
-           <div className="space-y-1">
-            <Label htmlFor="barcode-image-upload">Or Upload Barcode Image (Demo)</Label>
-            <Input id="barcode-image-upload" type="file" accept="image/*" onChange={handleBarcodeImageUpload} className="text-sm"/>
-            <p className="text-xs text-muted-foreground">Note: Image processing is for demonstration. Please use manual barcode entry.</p>
           </div>
         </CardContent>
       </Card>
@@ -320,3 +305,5 @@ export default function AddProductSection() {
     </div>
   );
 }
+
+    
