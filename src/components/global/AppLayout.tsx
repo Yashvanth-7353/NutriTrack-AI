@@ -12,8 +12,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <main className="flex-grow container mx-auto px-4 py-8">
         {children}
       </main>
-      <footer className="bg-muted/50 text-muted-foreground py-4 text-center text-sm">
-        © {new Date().getFullYear()} NutriTrack AI. All rights reserved.
+      <footer className="bg-muted/50 text-muted-foreground py-6 text-center text-sm">
+        <p>© {new Date().getFullYear()} NutriTrack AI. All rights reserved.</p>
+        <div className="mt-3 pt-3 border-t border-muted-foreground/20">
+          <p className="font-semibold mb-1">Developed by:</p>
+          <ul className="space-y-0.5">
+            <li>Yashvanth M U (1RV23IS141)</li>
+            <li>Yashwanth Rathi (1RV23IS142)</li>
+            <li>V Nikhil (1RV23IS132)</li>
+          </ul>
+        </div>
       </footer>
     </div>
   );
