@@ -1,0 +1,27 @@
+[
+  {
+    "barcode": "1234567890123",
+    "productName": "Organic Apples",
+    "ingredients": "Organic Apples"
+  },
+  {
+    "barcode": "9876543210987",
+    "productName": "Whole Wheat Bread",
+    "ingredients": "Whole wheat flour, Water, Yeast, Salt, Sugar, Ascorbic Acid"
+  },
+  {
+    "barcode": "1122334455661",
+    "productName": "Crunchy Peanut Butter",
+    "ingredients": "Roasted Peanuts, Sugar, Palm Oil, Salt"
+  },
+  {
+    "barcode": "5556667778882",
+    "productName": "Strawberry Yogurt",
+    "ingredients": "Cultured Grade A Milk, Sugar, Strawberries, Modified Corn Starch, Natural Flavor, Pectin, Carrageenan, Red 40"
+  },
+  {
+    "barcode": "1231231231230",
+    "productName": "Instant Noodles Chicken Flavor",
+    "ingredients": "Wheat Flour, Palm Oil, Salt, Monosodium Glutamate, Sodium Carbonate, Potassium Carbonate, Guar Gum, Artificial Chicken Flavor, Soy Sauce Powder, Dehydrated Chives"
+  }
+]
