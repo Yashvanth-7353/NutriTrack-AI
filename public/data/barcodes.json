@@ -1,27 +1,42 @@
 [
   {
-    "barcode": "1234567890123",
-    "productName": "Organic Apples",
-    "ingredients": "Organic Apples"
+    "barcode": "8901030721494",
+    "productName": "MAGGI 2-Minute Instant Noodles Masala",
+    "ingredients": "Noodle: Refined wheat flour (Maida), Palm oil, Iodised salt, Wheat gluten, Thickeners (508 & 412), Acidity regulators (501(i) & 500(i)) & Humectant (451(i)). Masala Tastemaker: Mixed spices (25.6%) (Onion powder, Coriander powder, Chilli powder, Turmeric powder, Garlic powder, Cumin powder, Aniseed powder, Ginger powder, Fenugreek powder, Black pepper powder, Clove powder, Green cardamom powder & Nutmeg powder), Refined wheat flour (Maida), Hydrolysed groundnut (peanut) protein, Sugar, Palm oil, Iodised salt, Starch, Thickener (508), Flavour enhancer (635), Toasted onion flakes, Acidity regulator (330), Colour (150d), Mineral (Ferric pyrophosphate) & Wheat gluten."
   },
   {
-    "barcode": "9876543210987",
-    "productName": "Whole Wheat Bread",
-    "ingredients": "Whole wheat flour, Water, Yeast, Salt, Sugar, Ascorbic Acid"
+    "barcode": "8901719123457",
+    "productName": "Britannia Good Day Cashew Cookies",
+    "ingredients": "Refined Wheat Flour (Maida), Sugar, Edible Vegetable Oil (Palm), Cashew Bits (4.5%), Invert Syrup, Milk Solids, Butter (0.6%), Iodised Salt, Raising Agents (503(ii), 500(ii)), Emulsifiers (322, 471, 472e), Nature Identical and Artificial (Milk, Butter & Vanilla) Flavouring Substances."
   },
   {
-    "barcode": "1122334455661",
-    "productName": "Crunchy Peanut Butter",
-    "ingredients": "Roasted Peanuts, Sugar, Palm Oil, Salt"
+    "barcode": "7622201761509",
+    "productName": "Cadbury Dairy Milk Chocolate Bar",
+    "ingredients": "Sugar, Milk Solids (22%), Cocoa Butter, Cocoa Solids, Emulsifiers (442, 476). Contains Added Flavour (Natural, Nature Identical and Artificial (Ethyl Vanillin) Flavouring Substances)."
   },
   {
-    "barcode": "5556667778882",
-    "productName": "Strawberry Yogurt",
-    "ingredients": "Cultured Grade A Milk, Sugar, Strawberries, Modified Corn Starch, Natural Flavor, Pectin, Carrageenan, Red 40"
+    "barcode": "4902430870956",
+    "productName": "Gillette Guard Shaving Foam Sensitive",
+    "ingredients": "Water, Triethanolamine, Palmitic Acid, Stearic Acid, Laureth-23, Butane, Isobutane, Sodium Lauryl Sulfate, Propane, Fragrance, BHT, Aloe Barbadensis Leaf Juice."
   },
   {
-    "barcode": "1231231231230",
-    "productName": "Instant Noodles Chicken Flavor",
-    "ingredients": "Wheat Flour, Palm Oil, Salt, Monosodium Glutamate, Sodium Carbonate, Potassium Carbonate, Guar Gum, Artificial Chicken Flavor, Soy Sauce Powder, Dehydrated Chives"
+    "barcode": "8901207001800",
+    "productName": "Parle-G Original Glucose Biscuits",
+    "ingredients": "Wheat Flour, Sugar, Edible Vegetable Oil (Palm Oil), Invert Sugar Syrup, Raising Agents [503 (ii), 500 (ii)], Iodised Salt, Milk Solids, Emulsifier [ Di-Acetyl Tartaric Acid Esters of Mono and Di-Glycerides of Edible Vegetable Oils] and Dough Conditioner [223]."
+  },
+  {
+    "barcode": "041220740000",
+    "productName": "Coca-Cola Classic (12 fl oz can)",
+    "ingredients": "Carbonated Water, High Fructose Corn Syrup, Caramel Color, Phosphoric Acid, Natural Flavors, Caffeine."
+  },
+  {
+    "barcode": "030000014609",
+    "productName": "Lay's Classic Potato Chips",
+    "ingredients": "Potatoes, Vegetable Oil (Corn, Canola, and/or Sunflower Oil), and Salt."
+  },
+  {
+    "barcode": "070272004080",
+    "productName": "Heinz Tomato Ketchup",
+    "ingredients": "Tomato Concentrate from Red Ripe Tomatoes, Distilled Vinegar, High Fructose Corn Syrup, Corn Syrup, Salt, Spice, Onion Powder, Natural Flavoring."
   }
 ]
