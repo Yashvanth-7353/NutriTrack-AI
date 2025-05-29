@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Barcode, CalendarPlus, Info, PackagePlus, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import { Barcode, CalendarPlus, Info, PackagePlus, AlertTriangle, Sparkles, Loader2, Tag, ShoppingBag } from 'lucide-react';
 import { lookupBarcodeAction } from '@/lib/actions';
 import type { BarcodeInfo, TrackedProduct } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,8 @@ export default function AddProductSection() {
   const [expiryDate, setExpiryDate] = useState('');
   const [customProductName, setCustomProductName] = useState('');
   const [customIngredients, setCustomIngredients] = useState('');
+  const [quantity, setQuantity] = useState<number>(1);
+  const [category, setCategory] = useState('');
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [isSuggestingIngredients, setIsSuggestingIngredients] = useState(false);
 
@@ -40,14 +42,15 @@ export default function AddProductSection() {
     setFoundProductInfo(null);
     setExpiryDate('');
     setCustomProductName('');
-    setCustomIngredients(''); // Reset custom ingredients on new lookup
+    setCustomIngredients('');
+    setQuantity(1);
+    setCategory('');
     setIsManualEntry(false);
 
     try {
       const product = await lookupBarcodeAction(barcode.trim());
       if (product) {
         setFoundProductInfo(product);
-        // If product found via barcode has ingredients, use them. Otherwise, customIngredients remains empty for AI suggestion.
         setCustomIngredients(product.ingredients || ''); 
         toast({ title: "Product Found", description: `${product.productName} details loaded.` });
       } else {
@@ -92,12 +95,13 @@ export default function AddProductSection() {
       toast({ title: "Expiry Date Required", description: "Please enter the expiry date.", variant: "destructive" });
       return;
     }
+    if (quantity < 1) {
+      toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "destructive" });
+      return;
+    }
 
     const productName = isManualEntry ? customProductName : foundProductInfo?.productName;
-    // Use customIngredients as the source of truth if it has been populated (either manually or by AI)
-    // Otherwise, fall back to foundProductInfo.ingredients (original from barcode DB)
     const ingredients = customIngredients.trim() ? customIngredients : (foundProductInfo?.ingredients || 'N/A');
-
 
     if (!productName) {
         toast({ title: "Product Name Required", description: "Please enter the product name for manual entry or look up a barcode.", variant: "destructive" });
@@ -112,6 +116,8 @@ export default function AddProductSection() {
       expiryDate,
       uploadDate: getCurrentDateFormatted(),
       status: calculateExpiryStatus(expiryDate),
+      quantity,
+      category: category.trim() || 'Uncategorized',
     };
 
     try {
@@ -126,6 +132,8 @@ export default function AddProductSection() {
       setExpiryDate('');
       setCustomProductName('');
       setCustomIngredients('');
+      setQuantity(1);
+      setCategory('');
       setIsManualEntry(false);
       setProductsVersion(v => v + 1); 
       window.dispatchEvent(new CustomEvent('productsUpdated'));
@@ -217,12 +225,10 @@ export default function AddProductSection() {
               {!isManualEntry && foundProductInfo && (
                 <div className="space-y-2 text-sm p-3 bg-secondary/50 rounded-md mb-2">
                   <p><strong>Product Name:</strong> {foundProductInfo.productName}</p>
-                  {/* Display original ingredients from barcode lookup if customIngredients is not set by AI yet */}
                   <p><strong>Database Ingredients:</strong> {foundProductInfo.ingredients || 'N/A'}</p>
                 </div>
               )}
 
-              {/* Ingredients section - always editable, can be AI populated */}
               <div>
                 <Label htmlFor="product-ingredients">Ingredients</Label>
                 <div className="flex flex-col sm:flex-row gap-2 items-start">
@@ -253,6 +259,32 @@ export default function AddProductSection() {
                 <p className="text-xs text-muted-foreground mt-1">Comma-separated. You can edit after AI suggestion.</p>
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    min="1"
+                    required
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    type="text"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="e.g., Dairy, Produce, Pantry"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              
               <div>
                 <Label htmlFor="expiry-date">Expiry Date</Label>
                 <Input
@@ -275,13 +307,13 @@ export default function AddProductSection() {
        {!barcode && !foundProductInfo && !isManualEntry && (
          <div className="p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-md flex items-start gap-3 text-sm">
             <Info className="h-5 w-5 mt-0.5 shrink-0"/>
-            <p>Enter a product barcode to automatically fetch its details, or enable manual entry if the barcode is not found or you wish to add a custom product. You can then use AI to suggest ingredients based on the product name.</p>
+            <p>Enter a product barcode to automatically fetch its details, or enable manual entry if the barcode is not found or you wish to add a custom product. You can then use AI to suggest ingredients based on the product name, and set its quantity, category, and expiry date.</p>
          </div>
        )}
        {barcode && !isLoadingBarcode && !foundProductInfo && !isManualEntry && (
          <div className="p-4 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-md flex items-start gap-3 text-sm">
             <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0"/>
-            <p>Product not found for barcode "{barcode}". You can proceed to add it manually by filling in the product name, then use AI to suggest ingredients, and set the expiry date.</p>
+            <p>Product not found for barcode "{barcode}". You can proceed to add it manually by filling in the product name, quantity, category, then use AI to suggest ingredients, and set the expiry date.</p>
          </div>
        )}
 

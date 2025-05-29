@@ -12,4 +12,6 @@ export interface TrackedProduct {
   uploadDate: string; // YYYY-MM-DD
   status: 'Valid' | 'Near Expiry' | 'Expired';
   ingredients: string;
+  quantity: number;
+  category: string;
 }

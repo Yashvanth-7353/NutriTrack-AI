@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, AlertTriangle, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, CheckCircle2, XCircle, Info, PlusCircle, MinusCircle } from 'lucide-react';
 import type { TrackedProduct } from '@/lib/types';
 import { formatDate, calculateExpiryStatus, exportToCSV } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -41,11 +41,12 @@ export default function ProductsDisplay() {
       const storedProductsJSON = localStorage.getItem(LS_PRODUCTS_KEY);
       const storedProducts: TrackedProduct[] = storedProductsJSON ? JSON.parse(storedProductsJSON) : [];
       
-      // Re-calculate status for all products on load, as date might have changed
       const updatedProducts = storedProducts.map(p => ({
         ...p,
-        status: calculateExpiryStatus(p.expiryDate)
-      })).sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()); // Sort by expiry date
+        status: calculateExpiryStatus(p.expiryDate),
+        quantity: p.quantity || 1, // Ensure quantity exists, default to 1
+        category: p.category || 'Uncategorized', // Ensure category exists
+      })).sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
 
       setProducts(updatedProducts);
     } catch (error) {
@@ -58,12 +59,29 @@ export default function ProductsDisplay() {
 
   useEffect(() => {
     loadProducts();
-    // Listen for custom event from AddProductSection
     window.addEventListener('productsUpdated', loadProducts);
     return () => {
       window.removeEventListener('productsUpdated', loadProducts);
     };
   }, [loadProducts]);
+
+  const handleUpdateQuantity = (productId: string, change: number) => {
+    try {
+      const updatedProducts = products.map(p => {
+        if (p.id === productId) {
+          const newQuantity = (p.quantity || 1) + change;
+          return { ...p, quantity: Math.max(1, newQuantity) }; // Ensure quantity is at least 1
+        }
+        return p;
+      });
+      localStorage.setItem(LS_PRODUCTS_KEY, JSON.stringify(updatedProducts));
+      setProducts(updatedProducts);
+      toast({ title: "Quantity Updated", description: "Product quantity has been adjusted." });
+    } catch (error) {
+      console.error("Failed to update quantity in localStorage", error);
+      toast({ title: "Error", description: "Could not update quantity.", variant: "destructive" });
+    }
+  };
 
   const handleDeleteProduct = (productId: string) => {
     try {
@@ -114,8 +132,10 @@ export default function ProductsDisplay() {
           <TableCaption>A list of your tracked food products. Products are sorted by expiry date.</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Product Name</TableHead>
+              <TableHead className="w-[180px]">Product Name</TableHead>
               <TableHead>Barcode</TableHead>
+              <TableHead className="w-[80px]">Qty</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Expiry Date</TableHead>
               <TableHead>Upload Date</TableHead>
               <TableHead>Status</TableHead>
@@ -129,6 +149,31 @@ export default function ProductsDisplay() {
               }>
                 <TableCell className="font-medium">{product.productName}</TableCell>
                 <TableCell>{product.barcode}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 sm:h-7 sm:w-7" 
+                      onClick={() => handleUpdateQuantity(product.id, -1)}
+                      disabled={(product.quantity || 1) <= 1}
+                      aria-label="Decrease quantity"
+                    >
+                      <MinusCircle className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium w-4 text-center">{product.quantity || 1}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 sm:h-7 sm:w-7"
+                      onClick={() => handleUpdateQuantity(product.id, 1)}
+                      aria-label="Increase quantity"
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell>{product.category || 'Uncategorized'}</TableCell>
                 <TableCell>{formatDate(product.expiryDate)}</TableCell>
                 <TableCell>{formatDate(product.uploadDate)}</TableCell>
                 <TableCell>{getStatusBadge(product.status)}</TableCell>
@@ -143,7 +188,7 @@ export default function ProductsDisplay() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the product "{product.productName}" from your tracker.
+                          This action cannot be undone. This will permanently delete "{product.productName}" (Quantity: {product.quantity}) from your tracker.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

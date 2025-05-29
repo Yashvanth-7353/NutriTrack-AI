@@ -47,12 +47,14 @@ export function exportToCSV(products: TrackedProduct[]): void {
     alert("No products to export.");
     return;
   }
-  const headers = ['Product Name', 'Barcode', 'Expiry Date', 'Upload Date', 'Status', 'Ingredients'];
+  const headers = ['Product Name', 'Barcode', 'Quantity', 'Category', 'Expiry Date', 'Upload Date', 'Status', 'Ingredients'];
   const csvRows = [
     headers.join(','),
     ...products.map(p => [
       `"${p.productName.replace(/"/g, '""')}"`,
       p.barcode,
+      p.quantity,
+      `"${(p.category || 'Uncategorized').replace(/"/g, '""')}"`,
       p.expiryDate,
       p.uploadDate,
       p.status,
