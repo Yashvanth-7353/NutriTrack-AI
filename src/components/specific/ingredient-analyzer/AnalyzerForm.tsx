@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -6,13 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, CheckSquare, Loader2 } from 'lucide-react';
-import { analyzeIngredients } from '@/ai/flows/analyze-ingredients'; // Ensure this path is correct
-import type { AnalyzeIngredientsInput } from '@/ai/flows/analyze-ingredients';
+import { analyzeIngredients } from '@/ai/flows/analyze-ingredients';
+import type { AnalyzeIngredientsInput, AnalyzeIngredientsOutput } from '@/ai/flows/analyze-ingredients';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AnalyzerForm() {
   const [ingredientsInput, setIngredientsInput] = useState('');
-  const [analysisResult, setAnalysisResult] = useState('');
+  const [analysisResult, setAnalysisResult] = useState<AnalyzeIngredientsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -22,22 +23,24 @@ export default function AnalyzerForm() {
       return;
     }
     setIsLoading(true);
-    setAnalysisResult('');
+    setAnalysisResult(null); // Clear previous results
 
     try {
       const input: AnalyzeIngredientsInput = { ingredients: ingredientsInput };
       const result = await analyzeIngredients(input);
-      if (result && result.analysis) {
-        setAnalysisResult(result.analysis);
+      
+      if (result) {
+        setAnalysisResult(result);
         toast({ title: "Analysis Complete", description: "Ingredient analysis has been generated." });
       } else {
-        setAnalysisResult("No analysis could be generated for the provided ingredients.");
-        toast({ title: "Analysis Failed", description: "Could not generate analysis. Please try again.", variant: "destructive" });
+        // This case might be hit if the flow returns null despite output schema
+        setAnalysisResult(null); 
+        toast({ title: "Analysis Failed", description: "Could not generate a structured analysis. Please try again.", variant: "destructive" });
       }
     } catch (error) {
       console.error("Error analyzing ingredients:", error);
-      setAnalysisResult("An error occurred while analyzing ingredients. Please check the console for details and try again.");
-      toast({ title: "Error", description: "An unexpected error occurred during analysis.", variant: "destructive" });
+      setAnalysisResult(null);
+      toast({ title: "Error", description: "An unexpected error occurred during analysis. The AI might be unable to process the request at this time.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -81,10 +84,49 @@ export default function AnalyzerForm() {
             </CardTitle>
             <CardDescription>Health insights based on the ingredients provided.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line text-foreground">
-              {analysisResult}
-            </div>
+          <CardContent className="space-y-4">
+            {analysisResult.introduction && (
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-primary">Introduction</h3>
+                <p className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line text-foreground">{analysisResult.introduction}</p>
+              </div>
+            )}
+
+            {analysisResult.harmfulEffects && analysisResult.harmfulEffects.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-primary">Potential Harmful Effects</h3>
+                <ul className="list-disc list-inside prose prose-sm max-w-none dark:prose-invert text-foreground space-y-1 pl-4">
+                  {analysisResult.harmfulEffects.map((effect, index) => (
+                    <li key={index}>{effect}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {analysisResult.fssaiLimits && (
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-primary">FSSAI Limits & Guidelines</h3>
+                <p className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line text-foreground">{analysisResult.fssaiLimits}</p>
+              </div>
+            )}
+
+            {analysisResult.commonProducts && analysisResult.commonProducts.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-primary">Commonly Found In</h3>
+                <ul className="list-disc list-inside prose prose-sm max-w-none dark:prose-invert text-foreground space-y-1 pl-4">
+                  {analysisResult.commonProducts.map((product, index) => (
+                    <li key={index}>{product}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {analysisResult.overallSummary && (
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-primary">Overall Summary</h3>
+                <p className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line text-foreground">{analysisResult.overallSummary}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
